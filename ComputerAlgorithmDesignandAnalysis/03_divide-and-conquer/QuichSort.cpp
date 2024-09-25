@@ -29,13 +29,29 @@ void QuickSort(int *array, int left, int right)
     }
 }
 
+void generateArray(int *array)
+{
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::mt19937 generator(seed);
+    std::uniform_int_distribution<int> distribution(0, 10000);
+    for (int i = 0; i < LENGTH; ++i)
+    {
+        array[i] = distribution(generator);
+    }
+}
+
 int main()
 {
-    int a[LENGTH] = {6, 9, 3, 2, 1};
+    int a[LENGTH];
+    generateArray(a);
+    using clock = std::chrono::high_resolution_clock;
+    auto start = clock::now();
     QuickSort(a, 0, LENGTH - 1);
-    for (auto x : a)
-    {
-        cout << x << " ";
-    }
+    auto end = clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << endl
+              << "time: " << duration.count() << " us" << std::endl;
+    // for (auto x : a)
+    //   cout << x << " ";
     return 0;
 }
