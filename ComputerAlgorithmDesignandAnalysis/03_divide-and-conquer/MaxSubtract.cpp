@@ -24,12 +24,12 @@ int dijixiao(int *S, int left, int right)
     }
     S[left] = S[xiao - 1];
     S[xiao - 1] = pivot;
-    cout << left << "  " << right << endl;
-    for (int i = 0; i < 16; ++i)
-    {
-        cout << S[i] << " ";
-    }
-    cout << endl;
+    // cout << left << "  " << right << endl;
+    // for (int i = 0; i < 16; ++i)
+    // {
+    //     cout << S[i] << " ";
+    // }
+    // cout << endl;
     return xiao;
 }
 
