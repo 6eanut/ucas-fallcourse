@@ -85,7 +85,9 @@ fn main() -> std::io::Result<()> {
   * runloop是一个[死循环](../image/sysMaster/runtime-runloop.png)，不断地处理SIGNAL、TIMER、SOCKET等
   * 崩溃快速自愈的实现是由runloop中的is_running来判断，之后会在main中执行reexec
 
-### 1-1 core-sctl
+### 1-1 core
+
+core部分实现了很多核心功能，这里拿sctl(systemctl)为例：
 
 ```rust
 // main函数位于sysmaster/core/sctl/src/main.rs
@@ -133,3 +135,59 @@ fn main() {
     exit((data.error_code & !ERROR_CODE_MASK_PRINT_STDOUT) as i32);
 }
 ```
+
+* parse_args
+  * 解析命令行参数
+* generate_command_request
+  * 生成命令请求
+  * 根据解析后的命令行参数生成CommandRequest对象
+* connect
+  * 连接sysmaster管理器
+  * 通过Unix域套接字连接到sysmaster管理器
+* ProstClientStream
+  * 创建ProstClientStream客户端，并通过execute方法发送命令请求
+* 处理返回结果
+  * 如果message为空，则表示没有出错；否则做出相应的处理
+
+### 1-2 exts
+
+exts下有**devmaster**(设备初始化和管理)、**fstab**(定义系统上的文件系统如何挂载)、**getty-generator**(生成getty配置或脚本的工具，getty用来初始化终端登录)、**hostname_setup**(配置主机名)、**hwdb**(硬件数据库)、**libudev**(设备管理器的库文件)、**libudev_macro**(支持libudev使用)、**machine-id-setup**(生成机器唯一标识符)、**random_seed**(随机数生成器)、**rc-local-generator**(Linux启动脚本)、**run**(存放运行时状态)、**switch_root**(与切换根文件系统相关)和**sysmonitor**(监控系统状态)
+
+这里以random_seed为例：
+
+```rust
+// main函数位于sysmaster/exts/random_seed/src/main.rs
+fn main() {
+    log::init_log_to_console_syslog("random-seed", log::Level::Debug);
+    let args: Vec<String> = env::args().collect();
+    if args.len() != 2 {
+        log::error!("{}", "This program requires one argument.");
+        process::exit(1);
+    }
+
+    unsafe {
+        libc::umask(0o022);
+    }
+
+    if let Err(str) = run(&args[1]) {
+        log::error!("{}", str);
+        process::exit(1);
+    }
+
+    process::exit(0);
+}
+```
+
+* init_log_to_console_syslog
+  * 初始化日志
+  * 将日志输出到控制台和系统日志，标签为random_seed，日志级别为Debug，所有级别大于等于Debug的日志消息都被记录
+* collect
+  * 收集命令行参数
+* args.len
+  * 检查参数数量，必须为2
+* umask
+  * 设置文件权限掩码
+  * 0o022/新创建的文件权限是-rw-r--r--/目录是drwxr-xr-x
+* run
+  * 当参数为load时，函数会读取随机种子文件的内容，并可能将部分内容写入/dev/urandom
+  * 当参数为save时，函数会生成新的随机数据，并将其保存到随机种子文件中
