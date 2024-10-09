@@ -2,20 +2,18 @@
 using namespace std;
 
 #define FLENGTH 8
-int F[FLENGTH];
 
-typedef struct node
+typedef struct Node
 {
     char character;
-    int frequence;
-    node *right;
-    node *left;
-} node;
-
-vector<node> nodes(10);
+    int frequency;
+    string code;
+    Node *right;
+    Node *left;
+} Node;
 
 // 生成斐波那契数列
-void generateFibonacci()
+void generateFibonacci(int *F)
 {
     F[0] = 1;
     F[1] = 1;
@@ -23,39 +21,93 @@ void generateFibonacci()
         F[i] = F[i - 1] + F[i - 2];
 }
 
-// 初始化节点
-void generateNodes()
+// 生成节点
+vector<Node> *generateNodes(int *F)
 {
-    char now = 'a';
-    for (int i = 0; i < FLENGTH; i++)
+    auto *nodes = new vector<Node>();
+    char ch = 'a';
+    for (int i = 0; i < FLENGTH; ++i)
     {
-        node *n = (node *)malloc(sizeof(node));
-        n[i].character = now++;
-        n[i].frequence = F[i];
-        n[i].left = NULL;
-        n[i].right = NULL;
-        nodes.push_back(&n);
+        Node node;
+        node.character = ch + i;
+        node.frequency = F[i];
+        node.code.assign("");
+        node.right = NULL;
+        node.left = NULL;
+        nodes->push_back(node);
+    }
+    return nodes;
+}
+
+// 生成huffman树
+Node *generateHuffman(vector<Node> *nodes)
+{
+    while (nodes->size() != 1)
+    {
+        Node *father = new Node();
+        Node left = nodes->front();
+        nodes->erase(nodes->begin());
+        Node right = nodes->front();
+        nodes->erase(nodes->begin());
+        father->left = new Node(left);
+        father->right = new Node(right);
+        father->frequency = left.frequency + right.frequency;
+        father->code.assign("");
+        nodes->insert(nodes->begin(), *father);
+    }
+    return new Node(nodes->front());
+}
+
+// 遍历二叉树
+void TestHuffman(Node *node)
+{
+    if (node)
+    {
+        cout << "character: " << node->character << ", frequency: " << node->frequency << ", code: " << node->code << endl;
+        TestHuffman(node->left);
+        TestHuffman(node->right);
     }
 }
 
-// 构建huffman树
-node *BuildHuffmanTree()
+// 生成Huffman-code
+void generateCodes(Node *node, string fatherCode, int left)
 {
-    for (int i = 0; i < FLENGTH;)
+    if (node)
     {
-        node *father = (node *)malloc(sizeof(node));
-        father->left = &nodes[i];
-        father->right = &nodes[i + 1];
-        father->frequence = nodes[i].frequence + nodes[i + 1].frequence;
-        father->character = ' ';
+        node->code.append(fatherCode);
+        if (left == 1)
+        {
+            node->code.append("1");
+        }
+        else if (left == 2)
+        {
+            node->code.append("0");
+        }
+        generateCodes(node->left, node->code, 1);
+        generateCodes(node->right, node->code, 2);
     }
 }
 
 int main()
 {
-    generateFibonacci();
-    generateNodes();
+    int Fibonacci[FLENGTH];
+    generateFibonacci(Fibonacci);
+    // for (int i = 0; i < FLENGTH; ++i)
+    // {
+    //     cout << Fibonacci[i] << " ";
+    // }
 
-    node *root = BuildHuffmanTree();
+    vector<Node> *nodes = generateNodes(Fibonacci);
+    // for (auto it = nodes->begin(); it != nodes->end(); it++)
+    // {
+    //     Node node = *it;
+    //     cout << node.character << " " << node.frequency << " " << endl;
+    // }
+
+    Node *root = generateHuffman(nodes);
+    // TestHuffman(root);
+
+    generateCodes(root, "", 0);
+    TestHuffman(root);
     return 0;
 }
