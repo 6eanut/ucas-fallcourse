@@ -92,10 +92,10 @@ int main()
 {
     int Fibonacci[FLENGTH];
     generateFibonacci(Fibonacci);
-    // for (int i = 0; i < FLENGTH; ++i)
-    // {
-    //     cout << Fibonacci[i] << " ";
-    // }
+    for (int i = 0; i < FLENGTH; ++i)
+    {
+        cout << Fibonacci[i] << " ";
+    }
 
     vector<Node> *nodes = generateNodes(Fibonacci);
     // for (auto it = nodes->begin(); it != nodes->end(); it++)
@@ -108,6 +108,6 @@ int main()
     // TestHuffman(root);
 
     generateCodes(root, "", 0);
-    TestHuffman(root);
+    // TestHuffman(root);
     return 0;
 }
